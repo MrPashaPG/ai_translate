@@ -4,8 +4,9 @@ use std::{
     sync::LazyLock,
 };
 
-mod logger;
 mod queue;
+mod logger;
+mod parser;
 mod scanner;
 
 static LOGGER: LazyLock<logger::Logger> = LazyLock::new(|| logger::Logger::new("Main"));
@@ -44,12 +45,27 @@ fn main() {
                 panic!()
             }
         };
-        
+
         let _subtitles_path =
             scanner::collect_subtitles_path(dir_path.as_str(), &mut subtitles_queue);
 
         LOGGER.success(format!("Total subtitle files found: {}\n", subtitles_queue.len()).as_str());
 
+        if subtitles_queue.is_empty() {
+            LOGGER.bold_warning("No subtitle files found in the specified folder.\n");
+            continue;
+        }
+
+        // for _ in 0..subtitles_queue.len() {
+        for _ in 0..1 {
+            let subtitle_path = subtitles_queue.dequeue().unwrap();
+            LOGGER.info(format!("Processing subtitle file: {}\n", subtitle_path.display()).as_str());
+            let sub_deformated = parser::format_subtitle_file(subtitle_path);
+            let ai_string = parser::convert_to_ai_string(sub_deformated[1].clone());
+            println!("{}", ai_string);
+        }
+
+        subtitles_queue.clear();
         LOGGER.bold("\n============================================\n");
         LOGGER.bold("Ready for next folder path...\n\n");
     }
