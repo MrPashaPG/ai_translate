@@ -92,7 +92,7 @@ pub fn wrap_with_markers(text: &String, max_width: usize) -> String {
             format!("{} {}", current, word)
         };
 
-        if tentative.chars().count() > max_width {
+        if tentative.chars().count() > max_width && max_width > 0 {
             lines.push(current);
             current = word.to_string();
         } else {

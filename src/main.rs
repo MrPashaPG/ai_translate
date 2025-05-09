@@ -9,15 +9,25 @@ mod parser;
 mod queue;
 mod scanner;
 mod translator;
+mod writer;
 
 static LOGGER: LazyLock<logger::Logger> = LazyLock::new(|| logger::Logger::new("Main"));
 
 fn main() {
     // let mut gemini_api = Option::<String>::None;
     let mut subtitles_queue = queue::FifoQueue::<PathBuf>::new();
-    let mut max_lenght_line = 45;
+    let max_lenght_line: usize;
 
     LOGGER.bold("This program is designed to translate English subtitles of educational courses into Persian using artificial intelligence.\n\n");
+
+    max_lenght_line = terminal_max_lenght_line_input();
+    LOGGER.bold_warning(
+        format!(
+            "Maximum length of each line in the subtitle file: {}\n",
+            max_lenght_line
+        )
+        .as_str(),
+    );
 
     loop {
         // if gemini_api.is_none() {
@@ -74,17 +84,16 @@ fn main() {
                 );
                 continue;
             }
-            let mut sub_deformated = parser::format_subtitle_file(subtitle_path);
+            let mut sub_deformated = parser::format_subtitle_file(subtitle_path.clone());
             let ai_string = parser::convert_vec_to_ai_string(sub_deformated[1].clone());
             LOGGER.info("Start translating...\n");
             let translated_content = translator::translate_subtitle(ai_string);
             LOGGER.success("End of translating\n");
             sub_deformated[1] = parser::convert_ai_string_to_vec(translated_content);
-            let srt_content = parser::convert_formated_subtitle_to_srt_format(
-                sub_deformated,
-                max_lenght_line,
-            );
-            println!("{}", srt_content);
+            let srt_content =
+                parser::convert_formated_subtitle_to_srt_format(sub_deformated, max_lenght_line);
+            LOGGER.success("End of converting to SRT format\n");
+            writer::write_translated_and_copy_original(&subtitle_path, srt_content);
         }
 
         subtitles_queue.clear();
@@ -149,6 +158,7 @@ Additionally, if there are other subfolders within that directory, it will also 
         }
     }
 }
+
 fn _terminal_api_key_input() -> Result<String, String> {
     LOGGER.bold("Please enter your Gemini API key to use the translation service.\n");
     LOGGER.bold("You can get your Gemini API key from https://gemini.com/api.\n");
@@ -168,6 +178,36 @@ fn _terminal_api_key_input() -> Result<String, String> {
         Err(error) => {
             LOGGER.bold_error(&format!("Error reading input: {}\n", error));
             return Err("exit".to_string());
+        }
+    }
+}
+
+fn terminal_max_lenght_line_input() -> usize {
+    LOGGER.bold(
+        "Please enter the maximum length of each line in the subtitle file (default is 55): ",
+    );
+    io::stdout().flush().unwrap();
+
+    let mut max_length_buffer = String::new();
+    loop {
+        match io::stdin().read_line(&mut max_length_buffer) {
+            Ok(_) => {
+                let max_length = max_length_buffer.trim();
+                if max_length.is_empty() {
+                    return 55;
+                }
+                match max_length.parse::<usize>() {
+                    Ok(length) => return length,
+                    Err(_) => {
+                        LOGGER.bold_error("Invalid input. Please enter a valid number.\n");
+                        continue;
+                    }
+                }
+            }
+            Err(error) => {
+                LOGGER.bold_error(&format!("Error reading input: {}\n", error));
+                panic!();
+            }
         }
     }
 }
