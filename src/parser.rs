@@ -106,7 +106,7 @@ pub fn wrap_with_markers(text: &String, max_width: usize) -> String {
 
     lines
         .into_iter()
-        .map(|line| format!("‫{}‬", line))
+        .map(|line| format!("\u{202b}{}\u{202c}", line))
         .collect::<Vec<_>>()
         .join("\n")
 }

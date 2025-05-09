@@ -31,7 +31,9 @@ pub fn collect_subtitles_path(dir_path: &str, subtitles_queue: &mut FifoQueue<Pa
     for entry in entries {
         let path = entry.path();
         if path.is_dir() {
-            if path.file_name() == Some(OsStr::new(env!("TRANSLATE_TARGET_DIR"))) {
+            if path.file_name() == Some(OsStr::new(env!("TRANSLATE_TARGET_DIR")))
+                || path.file_name() == Some(OsStr::new(env!("ORIGINAL_SUB_TARGET_DIR")))
+            {
                 LOGGER.warning(format!("Skip this folder: {}\n", path.display()).as_str());
                 continue;
             }
