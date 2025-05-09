@@ -4,16 +4,18 @@ use std::{
     sync::LazyLock,
 };
 
-mod queue;
 mod logger;
 mod parser;
+mod queue;
 mod scanner;
+mod translator;
 
 static LOGGER: LazyLock<logger::Logger> = LazyLock::new(|| logger::Logger::new("Main"));
 
 fn main() {
     // let mut gemini_api = Option::<String>::None;
     let mut subtitles_queue = queue::FifoQueue::<PathBuf>::new();
+    let mut max_lenght_line = 45;
 
     LOGGER.bold("This program is designed to translate English subtitles of educational courses into Persian using artificial intelligence.\n\n");
 
@@ -59,10 +61,30 @@ fn main() {
         // for _ in 0..subtitles_queue.len() {
         for _ in 0..1 {
             let subtitle_path = subtitles_queue.dequeue().unwrap();
-            LOGGER.info(format!("Processing subtitle file: {}\n", subtitle_path.display()).as_str());
-            let sub_deformated = parser::format_subtitle_file(subtitle_path);
-            let ai_string = parser::convert_to_ai_string(sub_deformated[1].clone());
-            println!("{}", ai_string);
+            LOGGER
+                .info(format!("Processing subtitle file: {}\n", subtitle_path.display()).as_str());
+            if scanner::subtitle_exists_in_target_dir(&subtitle_path) {
+                LOGGER.warning(
+                    format!(
+                        "Subtitle file \"{}\" already exists in target directory: {}\n",
+                        subtitle_path.file_name().unwrap().to_str().unwrap(),
+                        env!("TRANSLATE_TARGET_DIR")
+                    )
+                    .as_str(),
+                );
+                continue;
+            }
+            let mut sub_deformated = parser::format_subtitle_file(subtitle_path);
+            let ai_string = parser::convert_vec_to_ai_string(sub_deformated[1].clone());
+            LOGGER.info("Start translating...\n");
+            let translated_content = translator::translate_subtitle(ai_string);
+            LOGGER.success("End of translating\n");
+            sub_deformated[1] = parser::convert_ai_string_to_vec(translated_content);
+            let srt_content = parser::convert_formated_subtitle_to_srt_format(
+                sub_deformated,
+                max_lenght_line,
+            );
+            println!("{}", srt_content);
         }
 
         subtitles_queue.clear();

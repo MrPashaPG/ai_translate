@@ -47,3 +47,24 @@ pub fn collect_subtitles_path(dir_path: &str, subtitles_queue: &mut FifoQueue<Pa
 
     LOGGER.success(format!("End scanning folder: '{}'\n", dir_path).as_str());
 }
+
+pub fn subtitle_exists_in_target_dir(original_path: &PathBuf) -> bool {
+    let parent_dir = match original_path.parent() {
+        Some(dir) => dir,
+        None => return false,
+    };
+
+    let fa_dir = parent_dir.join(env!("TRANSLATE_TARGET_DIR"));
+
+    if !fa_dir.is_dir() {
+        return false;
+    }
+
+    let file_name = match original_path.file_name() {
+        Some(name) => name,
+        None => return false,
+    };
+    let fa_file_path = fa_dir.join(file_name);
+
+    fa_file_path.is_file()
+}
