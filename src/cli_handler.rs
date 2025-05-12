@@ -8,13 +8,6 @@ use crate::logger::Logger;
 
 static LOGGER: LazyLock<Logger> = LazyLock::new(|| Logger::new("CLI_Handler"));
 
-// Enum to represent user's decision, potentially for more structured error/flow handling
-// pub enum UserInputDecision<T> {
-//     Proceed(T),
-//     Retry,
-//     Exit,
-// }
-
 pub fn get_user_path_input() -> Result<String, String> {
     LOGGER.bold("📂 Please enter the path to the main folder containing the subtitles you want to translate:");
     LOGGER.info("The program will scan this path and its subfolders for .srt files to translate.");

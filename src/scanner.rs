@@ -43,25 +43,21 @@ pub fn collect_subtitles_path(dir_path: &str, subtitles_queue: &mut FifoQueue<Pa
         }
     });
 
-    // Get target directory names from env variables or use defaults
-    let target_dir_env_name = "TRANSLATE_TARGET_DIR";
-    let original_sub_dir_env_name = "ORIGINAL_SUB_TARGET_DIR";
-
-    let target_dir_name = env::var(target_dir_env_name).unwrap_or_else(|_| {
+    let target_dir_name = env!("TRANSLATE_TARGET_DIR").parse().unwrap_or_else(|_| {
         LOGGER.warning(
             format!(
                 "Environment variable '{}' not set. Using default 'Translated_Subtitles'.",
-                target_dir_env_name
+                "TRANSLATE_TARGET_DIR"
             )
             .as_str(),
         );
         "Translated_Subtitles".to_string()
     });
-    let original_sub_dir_name = env::var(original_sub_dir_env_name).unwrap_or_else(|_| {
+    let original_sub_dir_name = env!("ORIGINAL_SUB_TARGET_DIR").parse().unwrap_or_else(|_| {
         LOGGER.warning(
             format!(
                 "Environment variable '{}' not set. Using default 'Original_Subtitles_Backup'.",
-                original_sub_dir_env_name
+                "ORIGINAL_SUB_TARGET_DIR"
             )
             .as_str(),
         );
@@ -129,12 +125,7 @@ pub fn subtitle_exists_in_target_dir(original_path: &PathBuf) -> bool {
         }
     };
 
-    let target_dir_env_name = "TRANSLATE_TARGET_DIR";
-    let target_dir_name = env::var(target_dir_env_name).unwrap_or_else(|_| {
-        // This warning will appear for every file if env var is not set. Consider setting a static default or logging once.
-        // LOGGER.warning(format!("Environment variable '{}' not set for target check. Using default 'Translated_Subtitles'.", target_dir_env_name).as_str());
-        "Translated_Subtitles".to_string()
-    });
+    let target_dir_name: String = env!("TRANSLATE_TARGET_DIR").parse().unwrap_or("Translated_Subtitles".to_owned());
 
     let fa_dir = parent_dir.join(target_dir_name);
 

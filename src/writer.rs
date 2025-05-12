@@ -23,18 +23,14 @@ pub fn write_translated_and_copy_original(
         }
     };
 
-    // Retrieve directory names from environment variables or use sensible defaults
-    let target_dir_env_name = "TRANSLATE_TARGET_DIR";
-    let original_sub_dir_env_name = "ORIGINAL_SUB_TARGET_DIR";
-
-    let target_dir_name = env::var(target_dir_env_name)
+    let target_dir_name = env!("TRANSLATE_TARGET_DIR").parse()
         .unwrap_or_else(|_| {
-            LOGGER.info(format!("Environment variable '{}' not set. Using default 'Translated_Subtitles'.", target_dir_env_name).as_str());
+            LOGGER.info(format!("Environment variable '{}' not set. Using default 'Translated_Subtitles'.", "TRANSLATE_TARGET_DIR").as_str());
             "Translated_Subtitles".to_string()
         });
-    let original_sub_dir_name = env::var(original_sub_dir_env_name)
+    let original_sub_dir_name = env!("ORIGINAL_SUB_TARGET_DIR").parse()
         .unwrap_or_else(|_| {
-            LOGGER.info(format!("Environment variable '{}' not set. Using default 'Original_Subtitles_Backup'.", original_sub_dir_env_name).as_str());
+            LOGGER.info(format!("Environment variable '{}' not set. Using default 'Original_Subtitles_Backup'.", "ORIGINAL_SUB_TARGET_DIR").as_str());
             "Original_Subtitles_Backup".to_string()
         });
 

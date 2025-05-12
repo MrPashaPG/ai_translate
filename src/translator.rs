@@ -10,23 +10,12 @@ use crate::logger::Logger;
 
 static LOGGER: LazyLock<Logger> = LazyLock::new(|| Logger::new("Translator"));
 
-// Environment variable names
-const SUBTITLE_LINE_CHUNKS_ENV: &str = "SUBTITLE_LINE_CHUNKS";
-const RETRY_COUNT_ENV: &str = "RETRY_ERROR";
-const RETRY_DELAY_MS_ENV: &str = "RETRY_DELAY_MS";
-
 pub fn translate_subtitle(subtitle_text: String, api_key: String) -> Result<String, String> {
-    let chunk_size: usize = env::var(SUBTITLE_LINE_CHUNKS_ENV)
-        .ok()
-        .and_then(|s| s.parse().ok())
+    let chunk_size: usize = env!("SUBTITLE_LINE_CHUNKS").parse()
         .unwrap_or(150);
-    let max_retries: u8 = env::var(RETRY_COUNT_ENV)
-        .ok()
-        .and_then(|s| s.parse().ok())
+    let max_retries: u8 = env!("MAX_RETRY_ERROR").parse()
         .unwrap_or(3);
-    let retry_delay_ms: u64 = env::var(RETRY_DELAY_MS_ENV)
-        .ok()
-        .and_then(|s| s.parse().ok())
+    let retry_delay_ms: u64 = env!("RETRY_DELAY_MS").parse()
         .unwrap_or(1000);
 
     if subtitle_text.trim().is_empty() {
