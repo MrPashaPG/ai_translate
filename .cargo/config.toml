@@ -1,3 +1,5 @@
 [env]
+RETRY_ERROR = "5"
+SUBTITLE_LINE_CHUNKS = "200"
 TRANSLATE_TARGET_DIR = "subtitle_fa"
 ORIGINAL_SUB_TARGET_DIR = "subtitle_en"

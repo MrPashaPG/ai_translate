@@ -73,7 +73,8 @@ fn main() {
         for _ in 0..subtitles_queue.len() {
             let subtitle_path = subtitles_queue.dequeue().unwrap();
             let subtitle_number = all_subtitles_file - subtitles_queue.len();
-            LOGGER.info(format!("Processing subtitle file: {}\n", subtitle_path.display()).as_str());
+            LOGGER
+                .info(format!("Processing subtitle file: {}\n", subtitle_path.display()).as_str());
             LOGGER.bold_info(format!("File {subtitle_number} of {all_subtitles_file}\n").as_str());
             if scanner::subtitle_exists_in_target_dir(&subtitle_path) {
                 LOGGER.warning(
@@ -91,11 +92,15 @@ fn main() {
             LOGGER.info("Start translating...\n");
             let translated_content =
                 translator::translate_subtitle(ai_string, gemini_api_keys.clone().unwrap());
+
+            if translated_content == "Error" {
+                continue;
+            }
+
             LOGGER.success("End of translating\n");
             sub_deformated[1] = parser::convert_ai_string_to_vec(translated_content);
             let srt_content =
                 parser::convert_formated_subtitle_to_srt_format(sub_deformated, max_lenght_line);
-            LOGGER.success("End of converting to SRT format\n");
             writer::write_translated_and_copy_original(&subtitle_path, srt_content);
         }
 

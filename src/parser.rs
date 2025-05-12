@@ -18,15 +18,13 @@ pub fn format_subtitle_file(file_path: PathBuf) -> [Vec<String>; 2] {
                     content_spliter[0][section_count]
                         .push_str((parts.next().unwrap_or_default().to_owned() + "\r\n").as_str());
                 }
-                
-                content_spliter[1]
-                        .push(parts.next().unwrap_or_default().to_owned());
-                
+
+                content_spliter[1].push(parts.next().unwrap_or_default().to_owned());
             }
 
             section_count += 1;
         });
-    
+
     content_spliter
 }
 
@@ -34,9 +32,7 @@ pub fn convert_vec_to_ai_string(content: Vec<String>) -> String {
     let mut ai_string = String::new();
 
     for i in 0..content.len() {
-        ai_string.push_str(
-            format!("{}_{}\n", i, content[i]).as_str(),
-        );
+        ai_string.push_str(format!("{}_{}\n", i, content[i]).as_str());
     }
 
     ai_string
@@ -56,7 +52,10 @@ pub fn convert_ai_string_to_vec(content: String) -> Vec<String> {
     ai_string
 }
 
-pub fn convert_formated_subtitle_to_srt_format(formated_sub: [Vec<String>; 2], max_width: usize) -> String {
+pub fn convert_formated_subtitle_to_srt_format(
+    formated_sub: [Vec<String>; 2],
+    max_width: usize,
+) -> String {
     let mut srt_content = String::new();
 
     for i in 0..formated_sub[0].len() {
