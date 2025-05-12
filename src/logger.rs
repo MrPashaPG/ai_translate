@@ -10,12 +10,12 @@ const DIM: &str = "\x1b[2m";
 const BOLD: &str = "\x1b[1m";
 
 // Emojis for log levels
-const INFO_ICON: &str = "ℹ️ ";
-const WARNING_ICON: &str = "⚠️ ";
+const INFO_ICON: &str = "ℹ️";
+const WARNING_ICON: &str = "⚠️";
 const ERROR_ICON: &str = "❌";
 const SUCCESS_ICON: &str = "✅";
 const DEBUG_ICON: &str = "🐞";
-const GEAR_ICON: &str = "⚙️ ";
+const GEAR_ICON: &str = "⚙️";
 
 pub struct Logger {
     module_name: &'static str,
@@ -99,11 +99,6 @@ impl Logger {
         print!("{}{}{}\n", BOLD, message, RESET);
     }
 
-    // It might be better to simplify and let the main color of the level dominate
-    // or integrate boldness directly into the primary log functions if needed often.
-    // For now, keeping them separate but consider if they are truly needed
-    // or if `info`, `warning` etc. should have a `bold_message` parameter.
-
     pub fn bold_message_info(&self, message: &str) {
         print!(
             "{}: {}{}{}{}\n",
@@ -148,7 +143,6 @@ impl Logger {
         );
     }
 
-    // A general purpose log with an icon, for processes or statuses
     pub fn process(&self, message: &str) {
         print!(
             "{}: {}{}{}\n",
@@ -160,5 +154,5 @@ impl Logger {
     }
 }
 
-// ✅ 
-// ℹ️ 
+// ✅
+// ℹ️
