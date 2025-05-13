@@ -98,8 +98,10 @@ pub fn collect_subtitles_path(dir_path: &str, subtitles_queue: &mut FifoQueue<Pa
                 .to_str()
                 .unwrap_or_default();
 
-            if !file_name.contains("_fa") && !file_name.ends_with("_fa.srt") {
-                // More specific check for "_fa"
+            if !file_name.contains("_fa")
+                && !file_name.contains(".fa")
+                && !file_name.ends_with("fa.srt")
+            {
                 LOGGER.debug(format!("Subtitle file found: {}", path.display()).as_str());
                 subtitles_queue.enqueue(path);
             } else {
@@ -125,7 +127,9 @@ pub fn subtitle_exists_in_target_dir(original_path: &PathBuf) -> bool {
         }
     };
 
-    let target_dir_name: String = env!("TRANSLATE_TARGET_DIR").parse().unwrap_or("Translated_Subtitles".to_owned());
+    let target_dir_name: String = env!("TRANSLATE_TARGET_DIR")
+        .parse()
+        .unwrap_or("Translated_Subtitles".to_owned());
 
     let fa_dir = parent_dir.join(target_dir_name);
 
