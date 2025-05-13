@@ -11,12 +11,9 @@ use crate::logger::Logger;
 static LOGGER: LazyLock<Logger> = LazyLock::new(|| Logger::new("Translator"));
 
 pub fn translate_subtitle(subtitle_text: String, api_key: String) -> Result<String, String> {
-    let chunk_size: usize = env!("SUBTITLE_LINE_CHUNKS").parse()
-        .unwrap_or(150);
-    let max_retries: u8 = env!("MAX_RETRY_ERROR").parse()
-        .unwrap_or(3);
-    let retry_delay_ms: u64 = env!("RETRY_DELAY_MS").parse()
-        .unwrap_or(1000);
+    let chunk_size: usize = env!("SUBTITLE_LINE_CHUNKS").parse().unwrap_or(150);
+    let max_retries: u8 = env!("MAX_RETRY_ERROR").parse().unwrap_or(3);
+    let retry_delay_ms: u64 = env!("RETRY_DELAY_MS").parse().unwrap_or(1000);
 
     if subtitle_text.trim().is_empty() {
         LOGGER.warning("Input subtitle text is empty. Nothing to translate.");
@@ -48,8 +45,14 @@ pub fn translate_subtitle(subtitle_text: String, api_key: String) -> Result<Stri
         }
         LOGGER.process(format!("⏳ Translating chunk {} of {}...", i + 1, total_chunks).as_str());
 
-        match attempt_translation_with_retries(api_key.as_str(), chunk, i + 1, total_chunks, max_retries, retry_delay_ms)
-        {
+        match attempt_translation_with_retries(
+            api_key.as_str(),
+            chunk,
+            i + 1,
+            total_chunks,
+            max_retries,
+            retry_delay_ms,
+        ) {
             Ok(translated_chunk_text) => {
                 translated_chunks.push(translated_chunk_text);
                 LOGGER.success(
@@ -117,22 +120,24 @@ fn attempt_translation_with_retries(
                                 // Fall through to retry
                             } else {
                                 // Successfully got translatable text
-                                let res_translated = resp.candidates[0].content.parts[0].text.clone();
+                                let res_translated =
+                                    resp.candidates[0].content.parts[0].text.clone();
                                 match check_translated_and_orginal_lines(
-                                    &res_translated, 
-                                    &chunk_text, 
-                                    chunk_index, 
-                                    total_chunks) {
-                                        Ok(res) => return Ok(res),
-                                        Err(error) => {
-                                            if error == "NotEqual".to_owned() {
-                                                last_error = "The count of translated lines did not match the number of lines submitted for translation.".to_string();
-                                                LOGGER.warning(&last_error);
-                                            } else {
-                                                last_error = error;
-                                            }
+                                    &res_translated,
+                                    &chunk_text,
+                                    chunk_index,
+                                    total_chunks,
+                                ) {
+                                    Ok(res) => return Ok(res),
+                                    Err(error) => {
+                                        if error == "NotEqual".to_owned() {
+                                            last_error = "The count of translated lines did not match the number of lines submitted for translation.".to_string();
+                                            LOGGER.warning(&last_error);
+                                        } else {
+                                            last_error = error;
                                         }
-                                    };
+                                    }
+                                };
                             }
                         }
                         Err(e) => {
@@ -177,7 +182,7 @@ fn attempt_translation_with_retries(
 }
 
 fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error::Error>> {
-    let model_name = "gemini-2.0-flash"; // or "gemini-1.0-pro" etc.
+    let model_name = "gemini-2.0-flash"; // or "gemini-1.0-pro" or "gemini-1.5-flash-latest" etc.
     let url = format!(
         "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
         model_name, api_key
@@ -200,7 +205,7 @@ fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error:
     };
 
     let client = blocking::Client::builder()
-        .timeout(Duration::from_secs(180)) // Generous timeout for API
+        .timeout(Duration::from_secs(360)) // Generous timeout for API
         .build()?;
 
     LOGGER.debug(
@@ -245,39 +250,33 @@ fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error:
 }
 
 pub fn build_translation_prompt(input: &str) -> String {
-    format!("**System Role:**  
-You are a specialized English-to-Persian technical translation engine. Your job is to translate any English text into Persian **line by line**, while preserving specified technical terms and the exact original line structure.
+    format!("You are a translation assistant. When given a text enclosed in triple backticks:
 
-**Instructions:**  
-1. **Line Number Prefix:**  
-   - If a line begins with a numeric prefix followed by an underscore (e.g. `0_`, `1_`, `2_`, `3_`), keep that prefix unchanged at the start of the output line.  
-2. **Technical Elements Preservation:**  
-   Identify and leave unchanged any of the following within each line’s content:  
-   - **Programming Keywords:** if, else, for, while, return, function, class, ... etc.  
-   - **Technology Proper Nouns:** Rust, Python, Linux, Mozilla, ... etc.  
-   - **Symbols & Operators:** +, -, *, /, =, ==, {{}}, (), [], ... etc.  
-3. **Translation:**  
-   - Translate everything else into clear, fluent Persian.  
-4. **Reconstruction:**  
-   - The output **must** contain exactly the same number of lines, each line matching the input line’s length (excluding prefix) as closely as possible. Do not add, remove, merge, or split lines.  
-5. **Plain Text Output:**  
-   - Do **not** wrap your response in a code block.  
-   - Do **not** include any words, explanations, or messages before, after, or between the translated lines—deliver only the translated lines themselves.
+For each line, output exactly one translated line, in the same order and with the same floating-point line number prefix.
 
----
+Leave any software-engineering or programming-related technical terms (e.g. “Boolean”, “Rust”, “i32”, variable names, operators) in English, untranslated.
 
-**Input Text for Translation:**  
-(The lines below are the exact text you must translate according to the above rules. Do not translate anything outside this block.)
+Translate all other words into fluent Persian.
 
-```
-{}
-```
-", input)
+Do not merge, split, add, or remove any lines or line numbers; even if a line contains only one word or is empty, you must reproduce its line number and provide its translation or an empty line as appropriate.
+
+Do not output anything before or after the translated lines, and do not wrap the translations in a code block—only the translated lines themselves.
+
+Example input (for illustration only, do not translate this example):
+0.0_Hello World  
+0.1_Variable name: x  
+Expected output format (illustration only):
+0.0_سلام دنیا
+0.1_نام variable: x
+
+Now translate the text provided.
+
+```{}```", input)
 }
 
 pub fn extract_prefixed_lines(input: &str) -> String {
     // Regex to find lines that START with one or more digits followed by an underscore.
-    let prefix_re = Regex::new(r"^\d+_").unwrap();
+    let prefix_re = Regex::new(r"^\d+.\d+_").unwrap();
     let mut result_lines = Vec::new();
 
     for line in input.lines() {
@@ -313,7 +312,12 @@ fn split_into_chunks(text: &str, chunk_size: usize) -> Vec<String> {
         .collect()
 }
 
-fn check_translated_and_orginal_lines(ai_response: &String, orginal_chunk: &String, chunk_index: usize, total_chunks: usize) -> Result<String, String>{
+fn check_translated_and_orginal_lines(
+    ai_response: &String,
+    orginal_chunk: &String,
+    chunk_index: usize,
+    total_chunks: usize,
+) -> Result<String, String> {
     let extracted_lines = extract_prefixed_lines(&ai_response);
     if extracted_lines.is_empty() && !ai_response.trim().is_empty() {
         LOGGER.warning(format!("Chunk {}/{} translated, but no lines with numeric prefix were extracted. API response (partial): '{}'", chunk_index, total_chunks, ai_response.chars().take(100).collect::<String>()).as_str());
@@ -321,8 +325,7 @@ fn check_translated_and_orginal_lines(ai_response: &String, orginal_chunk: &Stri
         // For now, we are strict and expect prefixed lines.
         let err_msg = format!(
             "Error: Chunk {}/{}: No prefixed lines in translation from API.",
-            chunk_index,
-            total_chunks
+            chunk_index, total_chunks
         );
         LOGGER.error(err_msg.as_str());
         return Err(err_msg);
@@ -330,24 +333,22 @@ fn check_translated_and_orginal_lines(ai_response: &String, orginal_chunk: &Stri
         LOGGER.warning(
             format!(
                 "Chunk {}/{} translated, but API response was empty.",
-                chunk_index,
-                total_chunks
+                chunk_index, total_chunks
             )
             .as_str(),
         );
         // This is likely an issue with the API or prompt for this chunk.
         let err_msg = format!(
             "Error: Chunk {}/{}: Empty response from API.",
-            chunk_index,
-            total_chunks
+            chunk_index, total_chunks
         );
         LOGGER.error(err_msg.as_str());
         return Err(err_msg);
     }
-    
+
     let translated_lines = count_non_empty_lines(&extracted_lines);
     let orginal_lines = count_non_empty_lines(&orginal_chunk);
-    
+
     if translated_lines == orginal_lines {
         Ok(extracted_lines)
     } else {
@@ -356,10 +357,7 @@ fn check_translated_and_orginal_lines(ai_response: &String, orginal_chunk: &Stri
 }
 
 pub fn count_non_empty_lines(text: &String) -> usize {
-    text
-        .lines()
-        .filter(|line| !line.trim().is_empty())
-        .count()
+    text.lines().filter(|line| !line.trim().is_empty()).count()
 }
 
 // region Gemini API Structs (ensure these match the latest API spec if issues arise)

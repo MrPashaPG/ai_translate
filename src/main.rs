@@ -208,7 +208,7 @@ fn process_single_subtitle(
             
             LOGGER.info("Reconstructing subtitle file in SRT format...");
             let srt_content =
-                parser::convert_formated_subtitle_to_srt_format(sub_deformated, max_line_length);
+                parser::convert_formated_subtitle_to_srt_format(sub_deformated, max_line_length)?;
             
             writer::write_translated_and_copy_original(subtitle_path, srt_content);
 

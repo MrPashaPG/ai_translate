@@ -103,14 +103,18 @@ pub fn get_max_line_length_input() -> usize {
                     LOGGER.info("Using default max line length (55).");
                     return 55;
                 }
-                if max_length_str.eq_ignore_ascii_case("exit") || max_length_str.eq_ignore_ascii_case("quit") {
-                     LOGGER.warning("Max line length input cancelled by user. Using default (55).");
-                     return 55;
+                if max_length_str.eq_ignore_ascii_case("exit")
+                    || max_length_str.eq_ignore_ascii_case("quit")
+                {
+                    LOGGER.warning("Max line length input cancelled by user. Using default (55).");
+                    return 55;
                 }
                 match max_length_str.parse::<usize>() {
                     Ok(length) => {
                         if length > 0 {
-                            LOGGER.success(format!("Maximum line length set to {}.", length).as_str());
+                            LOGGER.success(
+                                format!("Maximum line length set to {}.", length).as_str(),
+                            );
                             return length;
                         } else {
                             LOGGER.warning("Line length must be greater than zero. Please enter a valid number or leave empty for default.");
@@ -126,7 +130,10 @@ pub fn get_max_line_length_input() -> usize {
                 }
             }
             Err(error) => {
-                LOGGER.error(&format!("Error reading input: {}. Using default max line length (55).", error));
+                LOGGER.error(&format!(
+                    "Error reading input: {}. Using default max line length (55).",
+                    error
+                ));
                 return 55; // Default on critical read error
             }
         }
