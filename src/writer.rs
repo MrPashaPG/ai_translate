@@ -51,7 +51,8 @@ pub fn write_translated_and_copy_original(
     }
 
     // Write the translated SRT file
-    let target_file_path = target_dir_path.join(file_name);
+    let fa_file_name = file_name.to_string_lossy().replace(".srt", ".fa.srt");
+    let target_file_path = target_dir_path.join(fa_file_name);
     match fs::write(&target_file_path, srt_content) {
         Ok(_) => {
             LOGGER.success(
@@ -76,8 +77,9 @@ pub fn write_translated_and_copy_original(
     }
 
     // Copy the original subtitle file to the backup directory, only if its creation was successful or already existed.
+    let en_file_name = file_name.to_string_lossy().replace(".srt", ".en.srt");
     if original_sub_target_dir_path.exists() || fs::create_dir_all(&original_sub_target_dir_path).is_ok() {
-        let original_backup_file_path = original_sub_target_dir_path.join(file_name);
+        let original_backup_file_path = original_sub_target_dir_path.join(en_file_name);
         match fs::copy(original_path, &original_backup_file_path) {
             Ok(_) => {
                 LOGGER.success(
