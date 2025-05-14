@@ -195,7 +195,7 @@ fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error:
             }],
         }],
         generation_config: Some(GenerationConfig {
-            temperature: Some(1.5), // Adjusted for more deterministic technical translation
+            temperature: Some(2.0), // Adjusted for more deterministic technical translation
             max_output_tokens: Some(8192), // Maximize output tokens
                                     // candidate_count: Some(1), // Default is 1, explicit for clarity
                                     // stop_sequences: None, // No specific stop sequences
@@ -251,23 +251,38 @@ fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error:
 
 pub fn build_translation_prompt(input: &str) -> String {
     format!("You are a translation assistant. When given a text enclosed in triple backticks:
-
 For each line, output exactly one translated line, in the same order and with the same floating-point line number prefix.
-
-Leave any software-engineering or programming-related technical terms (e.g. “Boolean”, “Rust”, “i32”, variable names, operators) in English, untranslated.
-
+Produce a fluent and technically accurate Persian translation. Prioritize translating technical software/programming terms into their common Persian equivalents. Retain in English only essential elements like specific code identifiers (e.g., user_id, calculateTotal, method, string, syntax, ...), programming language names (e.g., Rust, Kotlin, Python, ...), operators, or globally recognized acronyms (e.g., \"HTML\", ...) when their English form is standard in Persian and aids clarity. Text within punctuation should also be translated unless it's one of these essential English elements.
 Translate all other words into fluent Persian.
-
 Do not merge, split, add, or remove any lines or line numbers; even if a line contains only one word or is empty, you must reproduce its line number and provide its translation or an empty line as appropriate.
-
+Ensure that no line is left completely untranslated—every line must include at least one translated word where applicable (excluding purely technical identifiers).
 Do not output anything before or after the translated lines, and do not wrap the translations in a code block—only the translated lines themselves.
 
 Example input (for illustration only, do not translate this example):
-0.0_Hello World  
+```0.0_Hello World  
 0.1_Variable name: x  
+1.0_This is a really cool feature, ain't it?
+1.1_The system uses a \"FIFO\" queue.
+2.0_My 'main_loop' function is bugging out.
+2.1_Honestly, that \"whatchamacallit\" component is giving me a headache.
+3.0_We need to refactor the legacy code; it's a bit of a spaghetti monster right now, and the 'user_id' field requires \"validation\".
+4.0_Consider the [Array.prototype.map()] method.
+5.0_This \"quick fix\" is, like, totally not sustainable.
+5.1_The variable `count` should be an `i32`.
+5.2_Alright, let's get this show on the road!```
+
 Expected output format (illustration only):
 0.0_سلام دنیا
 0.1_نام variable: x
+1.0_این یک ویژگی واقعا باحال است، مگه نه؟
+1.1_سیستم از یک صف \"FIFO\" استفاده می‌کند.
+2.0_تابع 'main_loop' من ایراد پیدا کرده است.
+2.1_راستش رو بخوای، اون قطعه «فلان چیز» داره کلافه‌ام می‌کنه.
+3.0_ما باید کد قدیمی را بازآرایی کنیم؛ الان یک کم مثل هیولای اسپاگتی شده، و فیلد 'user_id' نیاز به «اعتبارسنجی» دارد.
+4.0_متد [Array.prototype.map()] را در نظر بگیرید.
+5.0_این «راه‌حل سریع»، انگار، کاملاً پایدار نیست.
+5.1_متغیر `count` باید یک `i32` باشد.
+5.2_خیلی خب، بزن بریم!
 
 Now translate the text provided.
 
