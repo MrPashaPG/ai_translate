@@ -5,6 +5,7 @@ use std::{
 };
 
 // Declare modules
+mod utils;
 mod logger;
 mod parser;
 mod queue;

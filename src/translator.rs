@@ -195,7 +195,7 @@ fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error:
             }],
         }],
         generation_config: Some(GenerationConfig {
-            temperature: Some(2.0), // Adjusted for more deterministic technical translation
+            temperature: Some(1.5), // Adjusted for more deterministic technical translation
             max_output_tokens: Some(8192), // Maximize output tokens
                                     // candidate_count: Some(1), // Default is 1, explicit for clarity
                                     // stop_sequences: None, // No specific stop sequences
@@ -229,7 +229,7 @@ fn gemini_api(api_key: &str, prompt: &str) -> Result<String, Box<dyn std::error:
         format!(
             "API Response Status: {}. Response (partial): {}",
             status,
-            text.chars().take(500).collect::<String>()
+            text.chars().collect::<String>()
         )
         .as_str(),
     );
@@ -256,10 +256,10 @@ Produce a fluent and technically accurate Persian translation. Prioritize transl
 Translate all other words into fluent Persian.
 Do not merge, split, add, or remove any lines or line numbers; even if a line contains only one word or is empty, you must reproduce its line number and provide its translation or an empty line as appropriate.
 Ensure that no line is left completely untranslated—every line must include at least one translated word where applicable (excluding purely technical identifiers).
-Do not output anything before or after the translated lines, and do not wrap the translations in a code block—only the translated lines themselves.
+Do not output anything before or after the translated lines, and do not wrap the translations in a code block this is important, dont use code block, only the translated lines themselves.
 
 Example input (for illustration only, do not translate this example):
-```0.0_Hello World  
+0.0_Hello World  
 0.1_Variable name: x  
 1.0_This is a really cool feature, ain't it?
 1.1_The system uses a \"FIFO\" queue.
@@ -269,7 +269,7 @@ Example input (for illustration only, do not translate this example):
 4.0_Consider the [Array.prototype.map()] method.
 5.0_This \"quick fix\" is, like, totally not sustainable.
 5.1_The variable `count` should be an `i32`.
-5.2_Alright, let's get this show on the road!```
+5.2_Alright, let's get this show on the road!
 
 Expected output format (illustration only):
 0.0_سلام دنیا

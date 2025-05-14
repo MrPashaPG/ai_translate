@@ -2,6 +2,7 @@ use std::{env, ffi::OsStr, fs, path::PathBuf, sync::LazyLock}; // Added env for 
 
 use crate::logger::Logger;
 use crate::queue::FifoQueue;
+use crate::utils;
 
 static LOGGER: LazyLock<Logger> = LazyLock::new(|| Logger::new("Scanner"));
 
@@ -151,7 +152,7 @@ pub fn subtitle_exists_in_target_dir(original_path: &PathBuf) -> bool {
             return false;
         }
     };
-    let fa_file_path = fa_dir.join(file_name);
+    let fa_file_path = fa_dir.join(utils::formated_to_fa_srt_name(file_name.to_string_lossy().as_ref()));
 
     let exists = fa_file_path.is_file();
     if exists {
